@@ -1,5 +1,5 @@
-import User from '../models/User.js'
-import Cart from '../models/Cart.js';
+import User from '../models/user.model.js'
+import Cart from '../models/cart.model.js'
 import { generateToken, verifyPassword } from '../utils/utils.js'
 
 export async function loginUser(req, res) {
@@ -24,7 +24,12 @@ export async function loginUser(req, res) {
 
         const token = generateToken(user)
 
-        res.cookie('currentUser', token, { signed: true, httpOnly: true, maxAge: 1000 * 60 * 60 * 24 })
+        res.cookie('currentUser', token, { 
+            signed: true, 
+            httpOnly: true, 
+            sameSite: 'none',
+            secure: true,
+            maxAge: 1000 * 60 * 60 * 24 })
 
         res.status(200).json({ 
             status: "success", 
@@ -85,9 +90,42 @@ export async function registerUser(req, res) {
     }
 }
 
+export async function currentUser(req, res) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ 
+                status: "error", 
+                message: "No hay una sesión activa" 
+            });
+        }
+        res.json({
+            status: "success",
+            payload: {
+                id: req.user._id || req.user.id,
+                first_name: req.user.first_name,
+                email: req.user.email,
+                age: req.user.age,
+                cart: req.user.cart,
+                role: req.user.role
+            }
+        });
+    } catch (error) {
+        console.error("Error en currentUser:", error);
+        res.status(500).json({ 
+            status: "error", 
+            message: "Error interno del servidor" 
+        });
+    }
+}
+
 export async function logoutUser(req, res) {
     try {
-        res.clearCookie('currentUser')
+        res.clearCookie('currentUser', {
+            signed: true,
+            httpOnly: true,
+            sameSite: 'none',
+            secure: true 
+        })
         
         return res.status(200).json({ 
             status: "success", 
