@@ -1,17 +1,24 @@
 import express from 'express'
 import cors from 'cors'
+import passport from 'passport'
+
 import { dbConnection } from './config/db.js'
-import productsRoutes from './routes/products.routes.js'
-import cartRoutes from './routes/cart.routes.js'
-import orderRoutes from './routes/order.routes.js'
+import productsRoutes from './routes/products.router.js'
+import cartRoutes from './routes/cart.router.js'
+import orderRoutes from './routes/order.router.js'
 
 const app = express()
+
 app.set("PORT", process.env.PORT || 3000)
 
 dbConnection()
 
 app.use(cors())
 app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+
+initializePassport()
+app.use(passport.initialize())
 
 app.get("/", (req, res) => {
   res.send("API Ecommerce funcionando 🚀")
