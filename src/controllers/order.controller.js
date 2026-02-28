@@ -4,7 +4,7 @@ import Product from "../models/product.model.js";
 
 export const CreateOrder = async (req, res) => {
   try {
-    const { cartId } = req.body
+    const cartId = req.user.cart
 
     const cart = await Cart.findById(cartId).populate("items.product")
 
@@ -13,9 +13,9 @@ export const CreateOrder = async (req, res) => {
     }
 
     for (const item of cart.items) {
-      if (item.quantity > item.product.stock) {
+      if (item.quantity > item.product.stock_producto) {
         return res.status(400).json({
-          message: `Stock insuficiente para ${item.product.nombre}`
+          message: `Stock insuficiente para ${item.product.nombre_producto}`
         })
       }
     }

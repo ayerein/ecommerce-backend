@@ -3,6 +3,7 @@ import { hashPassword } from "../utils/utils.js"
 
 const UserSchema = new mongoose.Schema({
     first_name: String,
+    last_name: String,
     email: { 
         type: String, 
         unique: true

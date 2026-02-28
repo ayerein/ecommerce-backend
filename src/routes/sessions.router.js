@@ -4,9 +4,9 @@ import { passportAuth } from '../middlewares/passportAuth.js'
 
 const router = Router()
 
-router.post ('/login', loginUser)
+router.post ('/login', passportAuth('login'), loginUser)
 
-router.post ('/register', registerUser)
+router.post ('/register', passportAuth('register'), registerUser)
 
 router.get('/current', passportAuth('jwt'), currentUser)
 

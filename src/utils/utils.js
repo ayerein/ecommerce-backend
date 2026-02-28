@@ -11,7 +11,7 @@ export function generateToken(user){
         role: user.role,
     }
 
-    return jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '1h'})
+    return jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '24h'})
 }
 
 export function verifyToken(token) {
