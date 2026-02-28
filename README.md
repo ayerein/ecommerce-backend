@@ -13,7 +13,7 @@ Este es el núcleo de procesamiento (API REST) del proyecto Ecommerce Full Stack
 * **MongoDB & Mongoose:** Base de datos NoSQL y modelado de datos mediante esquemas.
 * **CORS:** Configuración de seguridad para permitir peticiones desde el frontend.
 * **Dotenv:** Gestión de variables de entorno para proteger credenciales.
-* * **Passport.js:** Middleware de autenticación con estrategias local (Registro/Login) y JWT.
+* **Passport.js:** Middleware de autenticación con estrategias local (Registro/Login) y JWT.
 * **JWT (JSON Web Tokens):** Generación de tokens seguros para el manejo de sesiones.
 * **Bcrypt:** Encriptación de contraseñas mediante hashing para máxima seguridad.
 * **Cookie-Parser:** Manejo de cookies firmadas para el almacenamiento seguro del JWT.
