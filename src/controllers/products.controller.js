@@ -119,16 +119,15 @@ export const getProducts = async (req, res) => {
 
     res.json(products)
   } catch (error) {
-    console.log(error)
     res.status(500).json({ message: error.message })
   }
 }
 
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Product.distinct("nombre_categoria");
-    res.json(categories);
+    const categories = await Product.distinct("nombre_categoria")
+    res.json(categories)
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
   }

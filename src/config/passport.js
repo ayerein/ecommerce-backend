@@ -17,7 +17,6 @@ const cookieExtractor = req => {
     return token
 }
 
-
 const initializePassport = () => {
     passport.use('register', new LocalStrategy({
         passReqToCallback: true, 
@@ -40,14 +39,13 @@ const initializePassport = () => {
                 age,
                 password,
                 cart: newCart._id
-            });
+            })
 
             return done(null, newUser);
         } catch (error) {
             return done(error);
         }
     }))
-
 
     passport.use('login', new LocalStrategy({
         usernameField: 'email',
@@ -70,7 +68,6 @@ const initializePassport = () => {
             return done(error)
         }
     }))
-
 
     passport.use('jwt', new JWTStrategy({
         jwtFromRequest: ExtractJWT.fromExtractors([cookieExtractor]),

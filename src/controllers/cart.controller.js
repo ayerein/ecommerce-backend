@@ -24,11 +24,13 @@ export const createCart = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
+}
 
 export const addProductToCart = async (req, res) => {
   try {
     const { cartId, productId, quantity = 1 } = req.body
+
+    const userId = req.user?._id
 
     if (!productId) {
       return res.status(400).json({ message: "productId es requerido" })
@@ -42,20 +44,27 @@ export const addProductToCart = async (req, res) => {
 
     let cart
 
-    if (!cartId) {
+    if (userId) {
+      cart = await Cart.findOne({ user: userId, status: 'active' })
+    }
+
+    if (!cart && cartId) {
+      cart = await Cart.findById(cartId);
+    }
+
+    if (!cart) {
       cart = await Cart.create({
-          items: [{ product: productId, quantity }]
+        user: userId || null,
+        items: [{ product: productId, quantity }]
       })
       await cart.populate("items.product")
       return res.status(201).json(cart)
     }
 
-    cart = await Cart.findById(cartId)
-
-    if (!cart) {
-      return res.status(404).json({ message: "Carrito no encontrado" })
+    if (userId && !cart.user) {
+      cart.user = userId;
     }
-    
+
     const itemIndex = cart.items.findIndex(
       item => item.product.toString() === productId
     )
@@ -94,7 +103,7 @@ export const addProductToCart = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
+}
 
 export const getCartById = async (req, res) => {
     const { id } = req.params

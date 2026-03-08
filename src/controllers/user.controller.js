@@ -1,6 +1,7 @@
 import { mergeCarts } from '../services/cart.service.js'
 import { generateToken } from '../utils/utils.js'
-
+import User from "../models/user.model.js"
+import Cart from "../models/cart.model.js"
 
 export async function loginUser(req, res) {
     try {
@@ -29,6 +30,8 @@ export async function loginUser(req, res) {
             message: "Login exitoso",
             payload: {
                 first_name: user.first_name,
+                last_name: user.last_name,
+                age: user.age,
                 email: user.email,
                 role: user.role,
                 cart: user.cart
@@ -41,8 +44,6 @@ export async function loginUser(req, res) {
         })
     }
 }
-
-
 
 export async function registerUser(req, res) {
     try {
@@ -70,6 +71,8 @@ export async function registerUser(req, res) {
             message: "Usuario registrado con éxito",
             payload: {
                 first_name: user.first_name,
+                last_name: user.last_name,
+                age: user.age,
                 email: user.email,
                 role: user.role,
                 cart: user.cart
@@ -82,6 +85,47 @@ export async function registerUser(req, res) {
             status: "error", 
             message: "Error interno en el servidor al registrar" 
         })
+    }
+}
+
+export async function updateUser(req, res) {
+    try{
+        const user = req.user._id
+        const { first_name, last_name, email, age } = req.body
+
+        if (!first_name || !last_name || !email) {
+            return res.status(400).json({ message: "Debes completar los campos requeridos" })
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            user,
+            { first_name, last_name, email, age },
+            { new: true, runValidators: true } 
+        ).select("-password")
+
+        res.json({
+            message: "Perfil actualizado con éxito",
+            user: updatedUser
+        })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+
+}
+
+export const deleteUser = async (req, res) => {
+    try {
+        const userId = req.user._id
+
+        await Cart.findOneAndDelete({ user: userId })
+
+        await User.findByIdAndDelete(userId)
+
+        res.clearCookie('token')
+
+        res.json({ message: "Cuenta eliminada correctamente." })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
     }
 }
 

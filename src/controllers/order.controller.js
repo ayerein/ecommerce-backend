@@ -1,10 +1,11 @@
-import Cart from "../models/cart.model.js";
-import Orders from "../models/order.model.js";
-import Product from "../models/product.model.js";
+import Cart from "../models/cart.model.js"
+import Orders from "../models/order.model.js"
+import Product from "../models/product.model.js"
 
 export const CreateOrder = async (req, res) => {
   try {
     const cartId = req.user.cart
+    const userId = req.user._id
 
     const cart = await Cart.findById(cartId).populate("items.product")
 
@@ -27,6 +28,7 @@ export const CreateOrder = async (req, res) => {
     }
 
     const order = await Orders.create({
+      user: userId,
       items: cart.items.map(item => ({
         product: item.product._id,
         quantity: item.quantity,
@@ -44,4 +46,60 @@ export const CreateOrder = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
+}
+
+export const GetOrders = async (req, res) => {
+  try {
+    const { page = 1, limit = 5 } = req.query
+
+    let query = {}
+
+    if (req.user.role !== 'admin') {
+        query = { user: req.user._id }
+    }
+  
+    const options = {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        lean: true,
+        populate: [
+            { path: 'user', select: 'first_name last_name email' }, 
+            { path: 'items.product' }
+        ],
+        sort: { purchase_datetime: -1 }
+      }
+
+    const orders = await Orders.paginate(query, options)
+
+    res.status(200).json({
+        status: "success",
+        payload: orders.docs,
+        totalPages: orders.totalPages,
+        prevPage: orders.prevPage,
+        nextPage: orders.nextPage,
+        page: orders.page,
+        hasPrevPage: orders.hasPrevPage,
+        hasNextPage: orders.hasNextPage
+    })
+
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+export const UpdateOrderStatus = async (req, res) => {
+  try {
+        const { id } = req.params
+        const { status } = req.body
+
+        const updatedOrder = await Orders.findByIdAndUpdate(
+            id, 
+            { status }, 
+            { new: true }
+        )
+
+        res.status(200).json({ status: "success", payload: updatedOrder })
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 }
