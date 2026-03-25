@@ -1,5 +1,7 @@
-import Cart from "../models/cart.model.js";
-import Product from "../models/product.model.js";
+import CartDTO from "../models/dto/CartsDTO.js"
+import cartService from "../services/cart.service.js"
+import productServices from "../services/product.services.js"
+
 
 export const createCart = async (req, res) => {
   try {
@@ -9,18 +11,9 @@ export const createCart = async (req, res) => {
       return res.status(400).json({ message: "productId es requerido" })
     }
 
-    const cart = await Cart.create({
-      items: [
-        {
-          product: productId,
-          quantity
-        }
-      ]
-    })
+    const cart = await cartService.createCart(productId, quantity)
 
-    const populatedCart = await cart.populate("items.product")
-
-    res.status(201).json(populatedCart)
+    res.status(201).json(new CartDTO(cart))
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -36,37 +29,28 @@ export const addProductToCart = async (req, res) => {
       return res.status(400).json({ message: "productId es requerido" })
     }
 
-    const product = await Product.findById(productId)
+    const product = await productServices.getProductById(productId)
 
     if (!product) {
       return res.status(404).json({ message: "Producto no encontrado" })
     }
 
-    let cart
-
-    if (userId) {
-      cart = await Cart.findOne({ user: userId, status: 'active' })
-    }
-
-    if (!cart && cartId) {
-      cart = await Cart.findById(cartId);
-    }
+    let cart = await cartService.getCart(cartId, userId)
 
     if (!cart) {
-      cart = await Cart.create({
+      cart = await cartService.createCart({
         user: userId || null,
         items: [{ product: productId, quantity }]
       })
-      await cart.populate("items.product")
-      return res.status(201).json(cart)
+      return res.status(201).json(new CartDTO(newCart))
     }
 
     if (userId && !cart.user) {
-      cart.user = userId;
+      cart.user = userId
     }
 
-    const itemIndex = cart.items.findIndex(
-      item => item.product.toString() === productId
+    const itemIndex = cart.items.findIndex(item => 
+      (item.product._id || item.product).toString() === productId
     )
 
     if (itemIndex !== -1) {
@@ -95,10 +79,8 @@ export const addProductToCart = async (req, res) => {
     }
 
 
-    await cart.save()
-    await cart.populate("items.product")
-
-    res.json(cart)
+    const updatedCart = await cartService.saveCart(cart)
+    res.json(new CartDTO(updatedCart))
 
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -108,28 +90,29 @@ export const addProductToCart = async (req, res) => {
 export const getCartById = async (req, res) => {
     const { id } = req.params
 
-    const cart = await Cart.findById(id).populate("items.product")
+    const cart = await cartService.getCartById(id)
 
     if (!cart) {
         return res.status(404).json({ message: "Carrito no encontrado" })
     }
 
-    res.json(cart)
+    res.json(new CartDTO(cart))
 } 
 
 export const deleteProduct = async (req, res) => {
   try {
     const { cartId, productId } = req.params
 
-    const cart = await Cart.findById(cartId)
+    const cart = await cartService.getCartById(cartId)
 
     if (!cart) {
       return res.status(404).json({ message: "Carrito no encontrado" })
     }
 
-    const itemIndex = cart.items.findIndex(
-      item => item.product.toString() === productId
-    )
+    const itemIndex = cart.items.findIndex(item => {
+        const idEnCarrito = item.product._id ? item.product._id.toString() : item.product.toString();
+        return idEnCarrito === productId;
+    })
 
     if (itemIndex === -1) {
       return res.status(404).json({ message: "Producto no está en el carrito" })
@@ -137,14 +120,12 @@ export const deleteProduct = async (req, res) => {
 
     cart.items.splice(itemIndex, 1)
 
-    await cart.save()
+    const updatedCart = await cartService.saveCart(cart)
 
-    await cart.populate("items.product")
-
-    res.json(cart)
+    res.json(new CartDTO(updatedCart))
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
 }
 
@@ -152,17 +133,16 @@ export const clearCart = async (req, res) => {
   try {
     const { cartId } = req.params
 
-    const cart = await Cart.findById(cartId)
+    const cart = await cartService.getCartById(cartId)
 
     if (!cart) {
       return res.status(404).json({ message: "Carrito no encontrado" })
     }
 
     cart.items = []
-    await cart.save()
-    await cart.populate("items.product")
+    const updatedCart = await cartService.saveCart(cart)
 
-    res.json(cart)
+    res.json(new CartDTO(updatedCart))
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
