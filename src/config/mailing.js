@@ -10,7 +10,4 @@ export const transport = nodemailer.createTransport({
         user: process.env.MAILING_ACCOUNT,
         pass: process.env.MAILING_PASS
     },
-    tls: {
-        rejectUnauthorized: false
-    }
 })
