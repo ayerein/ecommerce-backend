@@ -4,7 +4,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 console.log("User:", process.env.MAILING_ACCOUNT)
 export const transport = nodemailer.createTransport({
-    host: process.env.MAILING_SERVICE,
+    host: process.env.MAILING_HOST,
+    service: MAILING_SERVICE,
     port: process.env.MAILING_PORT,
     secure: false,
     auth: {
@@ -13,5 +14,6 @@ export const transport = nodemailer.createTransport({
     },
     tls: {
         rejectUnauthorized: false
-    }
+    },
+    family: 4
 })
